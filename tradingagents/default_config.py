@@ -1,6 +1,45 @@
 import os
+from datetime import datetime
 
 _TRADINGAGENTS_HOME = os.path.join(os.path.expanduser("~"), ".tradingagents")
+
+# Auto-detect user's local timezone as an IANA timezone name.
+# Python's datetime gives ambiguous abbreviations like "CST" (could be China,
+# US Central, or Cuba), so we resolve by UTC offset against known timezones.
+def _detect_iana_timezone():
+    now = datetime.now()
+    local = now.astimezone()
+    utc_offset = local.utcoffset().total_seconds()
+    tz_abbrev = local.tzname()
+
+    # If the name is already a valid IANA timezone (contains "/"), use it
+    if "/" in tz_abbrev:
+        return tz_abbrev
+
+    # Fallback: find an IANA timezone with matching UTC offset.
+    # Prefer the most common city for each offset.
+    import pytz
+    common_cities = [
+        "Asia/Shanghai", "Asia/Hong_Kong", "Asia/Taipei", "Asia/Singapore",
+        "Asia/Tokyo", "Asia/Seoul", "Asia/Kolkata", "Asia/Dubai",
+        "Asia/Bangkok", "Asia/Jakarta", "Asia/Manila", "Asia/Kuala_Lumpur",
+        "Europe/London", "Europe/Paris", "Europe/Berlin", "Europe/Moscow",
+        "America/New_York", "America/Chicago", "America/Denver", "America/Los_Angeles",
+        "America/Sao_Paulo", "America/Toronto", "America/Mexico_City",
+        "Australia/Sydney", "Pacific/Auckland",
+        "Africa/Cairo", "Africa/Johannesburg", "Africa/Lagos",
+        "UTC",
+    ]
+    for name in common_cities:
+        tz = pytz.timezone(name)
+        try:
+            if tz.utcoffset(now).total_seconds() == utc_offset:
+                return name
+        except Exception:
+            pass
+    return "UTC"
+
+_USER_TIMEZONE = _detect_iana_timezone()
 
 DEFAULT_CONFIG = {
     "project_dir": os.path.abspath(os.path.join(os.path.dirname(__file__), ".")),
@@ -12,9 +51,9 @@ DEFAULT_CONFIG = {
     # Pending entries are never pruned. None disables rotation entirely.
     "memory_log_max_entries": None,
     # LLM settings
-    "llm_provider": "openai",
-    "deep_think_llm": "gpt-5.4",
-    "quick_think_llm": "gpt-5.4-mini",
+    "llm_provider": "qwen",
+    "deep_think_llm": "qwen3.6-plus",
+    "quick_think_llm": "qwen3.6-plus",
     # When None, each provider's client falls back to its own default endpoint
     # (api.openai.com for OpenAI, generativelanguage.googleapis.com for Gemini, ...).
     # The CLI overrides this per provider when the user picks one. Keeping a
@@ -31,6 +70,10 @@ DEFAULT_CONFIG = {
     # Output language for analyst reports and final decision
     # Internal agent debate stays in English for reasoning quality
     "output_language": "English",
+    # User's local timezone: auto-detected from system clock, used to convert
+    # the entered date to the market's local date (e.g. Beijing 2026-04-28
+    # 10:00 → US Eastern 2026-04-27 22:00 for AAPL)
+    "user_timezone": _USER_TIMEZONE,
     # Debate and discussion settings
     "max_debate_rounds": 1,
     "max_risk_discuss_rounds": 1,

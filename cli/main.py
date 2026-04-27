@@ -520,14 +520,8 @@ def get_user_selections():
     )
     analysis_date = get_analysis_date()
 
-    # Step 3: Output language
-    console.print(
-        create_question_box(
-            "Step 3: Output Language",
-            "Select the language for analyst reports and final decision"
-        )
-    )
-    output_language = ask_output_language()
+    # Step 3: Output language (fixed to Chinese)
+    output_language = "Chinese"
 
     # Step 4: Select analysts
     console.print(
@@ -557,20 +551,27 @@ def get_user_selections():
     selected_llm_provider, backend_url = select_llm_provider()
 
     # Step 7: Thinking agents
-    console.print(
-        create_question_box(
-            "Step 7: Thinking Agents", "Select your thinking agents for analysis"
+    provider_lower = selected_llm_provider.lower()
+
+    if provider_lower == "qwen":
+        # Qwen uses qwen3.6-plus for both modes, no user selection needed
+        selected_shallow_thinker = "qwen3.6-plus"
+        selected_deep_thinker = "qwen3.6-plus"
+        console.print("[green]Using qwen3.6-plus for both thinking agents[/green]")
+    else:
+        console.print(
+            create_question_box(
+                "Step 7: Thinking Agents", "Select your thinking agents for analysis"
+            )
         )
-    )
-    selected_shallow_thinker = select_shallow_thinking_agent(selected_llm_provider)
-    selected_deep_thinker = select_deep_thinking_agent(selected_llm_provider)
+        selected_shallow_thinker = select_shallow_thinking_agent(selected_llm_provider)
+        selected_deep_thinker = select_deep_thinking_agent(selected_llm_provider)
 
     # Step 8: Provider-specific thinking configuration
     thinking_level = None
     reasoning_effort = None
     anthropic_effort = None
 
-    provider_lower = selected_llm_provider.lower()
     if provider_lower == "google":
         console.print(
             create_question_box(
@@ -942,7 +943,7 @@ def run_analysis(checkpoint: bool = False):
     config["google_thinking_level"] = selections.get("google_thinking_level")
     config["openai_reasoning_effort"] = selections.get("openai_reasoning_effort")
     config["anthropic_effort"] = selections.get("anthropic_effort")
-    config["output_language"] = selections.get("output_language", "English")
+    config["output_language"] = selections.get("output_language", "Chinese")
     config["checkpoint_enabled"] = checkpoint
 
     # Create stats callback handler for tracking LLM/tool calls

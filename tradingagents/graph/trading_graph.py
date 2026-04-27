@@ -24,6 +24,7 @@ from tradingagents.agents.utils.agent_states import (
     RiskDebateState,
 )
 from tradingagents.dataflows.config import set_config
+from tradingagents.dataflows.utils import convert_to_market_date
 
 # Import the new abstract tool methods from agent_utils
 from tradingagents.agents.utils.agent_utils import (
@@ -269,6 +270,14 @@ class TradingAgentsGraph:
         successful node on a subsequent invocation with the same ticker+date.
         """
         self.ticker = company_name
+
+        # Convert the user-entered date from their local timezone to the
+        # market's local date (e.g. Beijing time → US Eastern for AAPL)
+        trade_date = convert_to_market_date(
+            str(trade_date),
+            company_name,
+            self.config.get("user_timezone", "Asia/Shanghai"),
+        )
 
         # Resolve any pending memory-log entries for this ticker before the pipeline runs.
         self._resolve_pending_entries(company_name)
