@@ -1,5 +1,5 @@
 import { useState, useEffect, useCallback } from 'react'
-import type { TaskInfo } from './types'
+import type { TaskInfo, TaskResponse } from './types'
 import { listRecent } from './api'
 import Header from './components/Header'
 import NewAnalysis from './components/NewAnalysis'
@@ -29,9 +29,14 @@ export default function App() {
     return () => clearInterval(interval)
   }, [loadTasks])
 
-  const handleAnalysisStart = (taskId: string) => {
-    setActiveTaskId(taskId)
-    setView('progress')
+  const handleAnalysisStart = (response: TaskResponse) => {
+    setActiveTaskId(response.task_id)
+    // If the task is already completed, go directly to report view
+    if (response.status === 'completed') {
+      setView('report')
+    } else {
+      setView('progress')
+    }
   }
 
   const handleTaskSelect = (taskId: string) => {

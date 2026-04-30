@@ -1,9 +1,9 @@
 import { useState } from 'react'
-import type { RunMode } from '../types'
+import type { RunMode, TaskResponse } from '../types'
 import { submitAnalysis } from '../api'
 
 interface Props {
-  onStart: (taskId: string) => void
+  onStart: (response: TaskResponse) => void
 }
 
 export default function NewAnalysis({ onStart }: Props) {
@@ -17,11 +17,11 @@ export default function NewAnalysis({ onStart }: Props) {
     setLoading(true)
     try {
       const res = await submitAnalysis({ ticker, mode })
-      // If validation failed or duplicate, show message but still navigate if task_id exists
+      // If validation failed, show error
       if (res.status === 'failed' && !res.task_id) {
         alert(res.message)
       } else {
-        onStart(res.task_id)
+        onStart(res)
       }
     } catch (err) {
       alert('提交失败: ' + (err as Error).message)
