@@ -1,0 +1,1 @@
+{"root":["./src/app.tsx","./src/api.ts","./src/main.tsx","./src/types.ts","./src/components/agentchain.tsx","./src/components/header.tsx","./src/components/liveprogress.tsx","./src/components/newanalysis.tsx","./src/components/reportview.tsx","./src/components/tasklist.tsx"],"version":"5.9.3"}

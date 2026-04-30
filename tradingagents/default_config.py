@@ -1,7 +1,8 @@
 import os
 from datetime import datetime
 
-_TRADINGAGENTS_HOME = os.path.join(os.path.expanduser("~"), ".tradingagents")
+_PROJECT_ROOT = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
+_TRADINGAGENTS_HOME = os.path.join(_PROJECT_ROOT, "reports")
 
 # Auto-detect user's local timezone as an IANA timezone name.
 # Python's datetime gives ambiguous abbreviations like "CST" (could be China,

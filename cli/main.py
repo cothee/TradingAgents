@@ -1218,5 +1218,29 @@ def analyze(
     run_analysis(checkpoint=checkpoint)
 
 
+@app.command()
+def web(
+    port: int = typer.Option(8000, "--port", "-p", help="Port to listen on"),
+    dev: bool = typer.Option(False, "--dev", "-d", help="Development mode (CORS enabled)"),
+):
+    """Start the TradingAgents web server."""
+    import uvicorn
+    from web.server.main import create_app
+
+    console.print(
+        Panel(
+            f"[bold green]TradingAgents Web Server[/bold green]\n\n"
+            f"  Local:  http://localhost:{port}\n"
+            f"  Mode:   {'Development' if dev else 'Production'}\n\n"
+            f"[dim]Press Ctrl+C to stop[/dim]",
+            border_style="green",
+            title="Web Server",
+        )
+    )
+
+    app_instance = create_app(dev_mode=dev)
+    uvicorn.run(app_instance, host="0.0.0.0", port=port, log_level="info")
+
+
 if __name__ == "__main__":
     app()

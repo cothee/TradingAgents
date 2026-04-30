@@ -4,7 +4,7 @@ from .base_client import BaseLLMClient
 
 # Providers that use the OpenAI-compatible chat completions API
 _OPENAI_COMPATIBLE = (
-    "openai", "xai", "deepseek", "qwen", "glm", "ollama", "openrouter",
+    "openai", "xai", "deepseek", "glm", "ollama", "openrouter",
 )
 
 
@@ -37,6 +37,10 @@ def create_llm_client(
     if provider_lower in _OPENAI_COMPATIBLE:
         from .openai_client import OpenAIClient
         return OpenAIClient(model, base_url, provider=provider_lower, **kwargs)
+
+    if provider_lower == "qwen":
+        from .qwen_client import QwenClient
+        return QwenClient(model, base_url, **kwargs)
 
     if provider_lower == "anthropic":
         from .anthropic_client import AnthropicClient
