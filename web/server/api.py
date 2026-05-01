@@ -77,28 +77,33 @@ async def recent_tasks():
 @router.get("/task/{task_id}/events")
 async def task_events(task_id: str):
     """SSE endpoint for real-time task events."""
+    import json
     eq = get_event_queue(task_id)
     if eq is None:
         raise HTTPException(status_code=404, detail="Task not found")
 
     async def event_generator():
+        import asyncio
         task = get_task(task_id)
         if task:
             yield {
                 "event": "task_status",
-                "data": task.model_dump(),
+                "data": json.dumps(task.model_dump()),
             }
 
         while True:
             try:
-                import asyncio
                 event = await asyncio.wait_for(eq.get(), timeout=30)
+                logger.info("SSE event yielded: %s", event.get("event"))
+                # Ensure data is JSON-encoded
+                if "data" in event and not isinstance(event["data"], str):
+                    event["data"] = json.dumps(event["data"])
                 yield event
                 if event["event"] in ("task_completed", "task_failed"):
                     break
             except asyncio.TimeoutError:
                 # Heartbeat to keep connection alive
-                yield {"event": "heartbeat", "data": {"task_id": task_id}}
+                yield {"event": "heartbeat", "data": json.dumps({"task_id": task_id})}
 
     return EventSourceResponse(event_generator())
 

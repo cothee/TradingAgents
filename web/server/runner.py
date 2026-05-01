@@ -1,5 +1,6 @@
 # web/server/runner.py
 import asyncio
+import json
 import logging
 import os
 from pathlib import Path
@@ -83,7 +84,6 @@ async def _execute_analysis(task_id: str, task: dict):
     report_dir.mkdir(parents=True, exist_ok=True)
 
     logger.info("Task %s: starting TradingAgentsGraph for %s on %s", task_id, task["ticker"], task["analysis_date"])
-    logger.info("Task %s: report_dir = %s", task_id, report_dir)
 
     def run_graph():
         try:
@@ -101,15 +101,9 @@ async def _execute_analysis(task_id: str, task: dict):
             for chunk in graph.graph.stream(init_state, **args):
                 chunk_count += 1
                 if cancel_event.is_set():
-                    logger.info("Task %s: cancelled after %d chunks", task_id, chunk_count)
                     break
-                logger.info("Task %s: chunk %d keys = %s", task_id, chunk_count, list(chunk.keys()))
                 _process_chunk_events(task_id, chunk)
-                # Keep last chunk as final state (matches CLI approach: trace[-1])
                 result["final_state"] = chunk
-
-            logger.info("Task %s: graph stream ended, total chunks = %d", task_id, chunk_count)
-            logger.info("Task %s: final state keys = %s", task_id, list(result["final_state"].keys()) if result["final_state"] else None)
         except Exception as e:
             logger.exception("Task %s: graph exception", task_id)
             result["error"] = str(e)
@@ -167,21 +161,33 @@ def _emit_event(eq, event: dict):
     """Thread-safe event emission: schedule put on the main event loop."""
     if _event_loop is None:
         return
-    _event_loop.call_soon_threadsafe(eq.put_nowait, event)
+    if eq is None:
+        return
+    # JSON-encode the data field to ensure proper format for frontend
+    if "data" in event and isinstance(event["data"], dict):
+        event["data"] = json.dumps(event["data"])
+    try:
+        asyncio.run_coroutine_threadsafe(eq.put(event), _event_loop)
+    except Exception:
+        pass
+
+
+# Track previous state values to detect new completions
+_prev_state: Dict[str, Any] = {}
 
 
 def _process_chunk_events(task_id: str, chunk: Dict[str, Any]):
-    """Synchronous event emission for use inside thread."""
+    """Synchronous event emission: detect newly populated keys and emit events."""
+    global _prev_state
     eq = _events().get(task_id)
     if not eq:
         return
 
-    # LangGraph stream yields {"NodeName": {state_updates}}, so we need
-    # to flatten all node outputs into a single update dict.
-    updates: Dict[str, Any] = {}
-    for node_name, node_output in chunk.items():
-        if isinstance(node_output, dict):
-            updates.update(node_output)
+    updates = chunk
+    if not updates:
+        return
+
+    prev = _prev_state.get(task_id, {})
 
     agent_map = {
         "market_report": "Market Analyst",
@@ -193,38 +199,54 @@ def _process_chunk_events(task_id: str, chunk: Dict[str, Any]):
         "risk_debate_state": "Risk Management",
     }
 
-    for key, name in agent_map.items():
-        if key in updates and updates[key]:
-            status = "in_progress"
-            if key == "risk_debate_state" and isinstance(updates[key], dict):
-                if updates[key].get("judge_decision"):
+    for key in agent_map.keys():
+        old_val = prev.get(key)
+        new_val = updates.get(key)
+
+        is_newly_populated = False
+        if isinstance(new_val, str):
+            if len(new_val) > 50 and (not old_val or old_val != new_val):
+                is_newly_populated = True
+        elif isinstance(new_val, dict):
+            if new_val and (not old_val or old_val != new_val):
+                is_newly_populated = True
+
+        if is_newly_populated:
+            status = "completed"
+            if key in ("risk_debate_state", "investment_debate_state"):
+                if isinstance(new_val, dict) and new_val.get("judge_decision"):
                     status = "completed"
+                else:
+                    status = "in_progress"
             _emit_event(eq, {
                 "event": "agent_progress",
-                "data": {"agent": name, "status": status},
+                "data": {"agent": agent_map[key], "status": status},
             })
 
-    section_map = {
-        "market_report": "市场分析",
-        "sentiment_report": "情感分析",
-        "news_report": "新闻分析",
-        "fundamentals_report": "基本面分析",
-        "trader_investment_plan": "交易计划",
-    }
+            if isinstance(new_val, str) and len(new_val) > 50:
+                section_map = {
+                    "market_report": "市场分析",
+                    "sentiment_report": "情感分析",
+                    "news_report": "新闻分析",
+                    "fundamentals_report": "基本面分析",
+                    "trader_investment_plan": "交易计划",
+                }
+                if key in section_map:
+                    _emit_event(eq, {
+                        "event": "report_section",
+                        "data": {"section": section_map[key], "content": new_val[:500]},
+                    })
 
-    for key, section_name in section_map.items():
-        if key in updates and updates[key] and isinstance(updates[key], str):
-            _emit_event(eq, {
-                "event": "report_section",
-                "data": {"section": section_name, "content": updates[key]},
-            })
-
-    if "final_trade_decision" in updates and updates["final_trade_decision"]:
+    new_fd = updates.get("final_trade_decision")
+    old_fd = prev.get("final_trade_decision", "")
+    if new_fd and new_fd != old_fd:
         _emit_event(eq, {
             "event": "report_section",
-            "data": {"section": "最终决策", "content": updates["final_trade_decision"]},
+            "data": {"section": "最终决策", "content": new_fd},
         })
         _emit_event(eq, {
             "event": "agent_progress",
             "data": {"agent": "Portfolio Manager", "status": "completed"},
         })
+
+    _prev_state[task_id] = updates
