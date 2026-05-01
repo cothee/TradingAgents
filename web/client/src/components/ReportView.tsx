@@ -2,6 +2,30 @@ import { useState, useEffect } from 'react'
 import { getTask } from '../api'
 import type { TaskInfo } from '../types'
 import ReactMarkdown from 'react-markdown'
+import type { Components } from 'react-markdown'
+import remarkGfm from 'remark-gfm'
+
+// Custom components for markdown table rendering
+const markdownComponents: Components = {
+  table: ({ children }) => (
+    <table className="w-full border-collapse my-4 border border-blue-500 rounded-lg overflow-hidden">
+      {children}
+    </table>
+  ),
+  thead: ({ children }) => (
+    <thead className="bg-gradient-to-r from-blue-900 to-blue-800">{children}</thead>
+  ),
+  th: ({ children }) => (
+    <th className="bg-blue-900 text-blue-400 font-semibold px-4 py-3 text-left border border-blue-600">
+      {children}
+    </th>
+  ),
+  tbody: ({ children }) => <tbody>{children}</tbody>,
+  tr: ({ children }) => <tr className="border-b border-gray-700">{children}</tr>,
+  td: ({ children }) => (
+    <td className="px-4 py-2 border border-gray-700 text-gray-200">{children}</td>
+  ),
+}
 
 interface Props {
   taskId: string
@@ -241,23 +265,18 @@ function ReportSection({ label, taskId, files, contents }: { label: string; task
         <div className="px-6 pb-6 border-t border-ta-border">
           <div className="space-y-4 mt-4">
             {files.map(f => {
-              const label = fileLabels[f.replace('.md', '')] || f.replace('.md', '')
+              const fileLabel = fileLabels[f.replace('.md', '')] || f.replace('.md', '')
               return (
                 <div key={f}>
                   {files.length > 1 && (
-                    <h4 className="text-ta-accent font-medium mb-2">{label}</h4>
+                    <h4 className="text-ta-accent font-medium mb-2">{fileLabel}</h4>
                   )}
                   <div className="markdown-content text-sm text-ta-text leading-relaxed">
-                    <ReactMarkdown>{contents[f] || ''}</ReactMarkdown>
+                    <ReactMarkdown remarkPlugins={[remarkGfm]} components={markdownComponents}>{contents[f] || ''}</ReactMarkdown>
                   </div>
                 </div>
               )
             })}
-            {files.length === 1 && (
-              <div className="markdown-content text-sm text-ta-text leading-relaxed">
-                <ReactMarkdown>{contents[files[0]] || ''}</ReactMarkdown>
-              </div>
-            )}
           </div>
         </div>
       )}

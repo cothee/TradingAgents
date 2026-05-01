@@ -222,3 +222,6 @@ __marimo__/
 reports/logs/
 reports/cache/
 reports/memory/
+
+# Node modules
+node_modules/
