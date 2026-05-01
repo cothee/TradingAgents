@@ -78,7 +78,7 @@ export default function LiveProgress({ taskId, onComplete, onBack }: Props) {
       {/* Progress bar */}
       <div className="bg-ta-card rounded-xl border border-ta-border p-6">
         <div className="flex items-center justify-between mb-3">
-          <button onClick={onBack} className="text-ta-muted hover:text-ta-text text-sm transition-colors">← 返回</button>
+          <button onClick={onBack} className="px-4 py-2 bg-ta-accent/10 border border-ta-accent/30 text-ta-accent rounded-lg hover:bg-ta-accent/20 transition-colors text-sm font-medium">← 返回</button>
           <span className="text-ta-text font-mono font-medium">{ticker || '分析中...'}</span>
           <span className="text-ta-muted font-mono text-sm">⏱ {formatTime(elapsed)}</span>
         </div>
@@ -93,7 +93,7 @@ export default function LiveProgress({ taskId, onComplete, onBack }: Props) {
 
       {/* Agent chain */}
       <div className="bg-ta-card rounded-xl border border-ta-border p-6">
-        <h3 className="text-sm text-ta-muted mb-4">Agent 执行链</h3>
+        <h3 className="text-sm text-ta-muted mb-4">执行链</h3>
         <AgentChain agents={agents} />
       </div>
 

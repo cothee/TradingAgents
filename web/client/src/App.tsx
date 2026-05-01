@@ -46,7 +46,7 @@ export default function App() {
 
   return (
     <div className="min-h-screen">
-      <Header />
+      <Header onHome={() => setView('home')} />
       <main className="max-w-6xl mx-auto px-6 py-8">
         {view === 'home' && (
           <>

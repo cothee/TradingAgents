@@ -78,7 +78,7 @@ function ReportFailed({ task, onBack }: { task: TaskInfo; onBack: () => void }) 
   return (
     <div className="space-y-6">
       <div className="flex items-center justify-between">
-        <button onClick={onBack} className="text-ta-muted hover:text-ta-text text-sm transition-colors">← 返回列表</button>
+        <button onClick={onBack} className="px-4 py-2 bg-ta-accent/10 border border-ta-accent/30 text-ta-accent rounded-lg hover:bg-ta-accent/20 transition-colors text-sm font-medium">← 返回列表</button>
       </div>
       <div className="bg-ta-card rounded-xl border border-ta-danger/30 p-10 text-center">
         <div className="text-ta-danger text-3xl font-bold mb-2">分析失败</div>
@@ -98,7 +98,7 @@ function ReportRunning({ task, onBack }: { task: TaskInfo; onBack: () => void })
   return (
     <div className="space-y-6">
       <div className="flex items-center justify-between">
-        <button onClick={onBack} className="text-ta-muted hover:text-ta-text text-sm transition-colors">← 返回列表</button>
+        <button onClick={onBack} className="px-4 py-2 bg-ta-accent/10 border border-ta-accent/30 text-ta-accent rounded-lg hover:bg-ta-accent/20 transition-colors text-sm font-medium">← 返回列表</button>
         <div className="text-ta-muted text-sm font-mono">{task.ticker} · {task.analysis_date}</div>
       </div>
       <div className="bg-ta-card rounded-xl border border-ta-accent/30 p-10 text-center">
@@ -119,7 +119,7 @@ function ReportCompleted({ task, onBack }: { task: TaskInfo; onBack: () => void 
     <div className="space-y-6">
       {/* Header */}
       <div className="flex items-center justify-between">
-        <button onClick={onBack} className="text-ta-muted hover:text-ta-text text-sm transition-colors">← 返回列表</button>
+        <button onClick={onBack} className="px-4 py-2 bg-ta-accent/10 border border-ta-accent/30 text-ta-accent rounded-lg hover:bg-ta-accent/20 transition-colors text-sm font-medium">← 返回列表</button>
         <div className="text-ta-muted text-sm font-mono">{task.ticker} · {task.analysis_date}</div>
       </div>
 
