@@ -2,9 +2,10 @@
 import logging
 from datetime import datetime
 from pathlib import Path
+import markdown
 
 from fastapi import APIRouter, HTTPException
-from fastapi.responses import PlainTextResponse
+from fastapi.responses import PlainTextResponse, JSONResponse
 from sse_starlette.sse import EventSourceResponse
 
 from web.server.schemas import AnalyzeRequest, TaskInfo, TaskListResponse, TaskResponse, TaskStatus
@@ -155,4 +156,25 @@ async def get_report_section_memory(task_id: str, section: str):
     content = sections.get(section)
     if content:
         return PlainTextResponse(content=content, media_type="text/markdown; charset=utf-8")
+    raise HTTPException(status_code=404, detail="Report section not found")
+
+
+@router.get("/task/{task_id}/report-html/{section:path}")
+async def get_report_html(task_id: str, section: str):
+    """Get a report file rendered as HTML (server-side rendering for mobile compatibility)."""
+    from web.server.tasks import _store
+    t = _store().get(task_id)
+    report_path = (t or {}).get("report_path")
+
+    if report_path:
+        section_file = Path(report_path) / section
+        if section_file.exists():
+            md_content = section_file.read_text(encoding="utf-8")
+            # Convert markdown to HTML with table extension
+            html_content = markdown.markdown(
+                md_content,
+                extensions=['tables', 'fenced_code', 'nl2br']
+            )
+            return JSONResponse(content={"html": html_content})
+
     raise HTTPException(status_code=404, detail="Report section not found")

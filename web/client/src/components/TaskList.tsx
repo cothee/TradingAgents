@@ -27,8 +27,8 @@ export default function TaskList({ tasks, onSelect }: Props) {
   return (
     <section>
       <h2 className="text-xl font-semibold text-ta-text mb-4">分析报告</h2>
-      <div className="bg-ta-card rounded-xl border border-ta-border overflow-hidden">
-        <table className="w-full text-sm">
+      <div className="bg-ta-card rounded-xl border border-ta-border overflow-x-auto">
+        <table className="w-full text-sm min-w-[480px]">
           <thead>
             <tr className="border-b border-ta-border text-ta-muted">
               <th className="text-left px-6 py-3 font-medium">代码</th>

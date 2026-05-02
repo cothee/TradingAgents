@@ -31,7 +31,7 @@ export default function NewAnalysis({ onStart }: Props) {
   }
 
   return (
-    <section className="bg-ta-card rounded-xl border border-ta-border p-8">
+    <section className="bg-ta-card rounded-xl border border-ta-border p-4 sm:p-8">
       <form onSubmit={handleSubmit} className="space-y-5">
         <div>
           <label className="block text-sm text-ta-muted mb-2">股票代码</label>

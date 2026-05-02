@@ -47,7 +47,7 @@ export default function App() {
   return (
     <div className="min-h-screen">
       <Header onHome={() => setView('home')} />
-      <main className="max-w-6xl mx-auto px-6 py-8">
+      <main className="max-w-6xl mx-auto px-4 sm:px-6 py-4 sm:py-8">
         {view === 'home' && (
           <>
             <NewAnalysis onStart={handleAnalysisStart} />
@@ -65,6 +65,12 @@ export default function App() {
         )}
         {view === 'report' && activeTaskId && (
           <ReportView taskId={activeTaskId} onBack={() => setView('home')} />
+        )}
+        {view === 'report' && !activeTaskId && (
+          <div className="text-center py-20 text-ta-muted">
+            <p>未选择任务，请返回主页重新选择</p>
+            <button onClick={() => setView('home')} className="mt-4 px-4 py-2 bg-ta-accent/10 border border-ta-accent/30 text-ta-accent rounded-lg">返回主页</button>
+          </div>
         )}
       </main>
     </div>

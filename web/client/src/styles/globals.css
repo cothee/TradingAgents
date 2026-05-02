@@ -43,43 +43,62 @@ body {
 .markdown-content blockquote {
   @apply border-l-2 border-ta-accent pl-4 text-ta-muted italic;
 }
-/* Table styles for markdown content */
+
+/* Server-side rendered HTML styles */
+.markdown-content h1 {
+  @apply text-xl font-bold text-ta-accent mt-4 mb-2;
+}
+.markdown-content h2 {
+  @apply text-lg font-semibold text-ta-accent mt-3 mb-2;
+}
+.markdown-content h3 {
+  @apply text-base font-semibold text-ta-accent mt-2 mb-1;
+}
+.markdown-content p {
+  @apply leading-relaxed mb-2;
+}
+.markdown-content ul {
+  @apply pl-6 mb-2 list-disc;
+}
+.markdown-content ol {
+  @apply pl-6 mb-2 list-decimal;
+}
+.markdown-content li {
+  @apply mb-1;
+}
+.markdown-content code {
+  @apply font-mono bg-ta-card px-1.5 py-0.5 rounded text-sm text-ta-accent;
+}
+.markdown-content pre {
+  @apply bg-ta-card p-3 rounded-lg overflow-x-auto mb-2;
+}
+.markdown-content pre code {
+  @apply bg-transparent p-0;
+}
 .markdown-content table {
-  width: 100%;
-  border-collapse: collapse;
-  margin: 1rem 0;
-  border: 2px solid #3b82f6;
+  @apply w-full border-collapse mb-3;
+  display: block;
+  overflow-x: auto;
+  -webkit-overflow-scrolling: touch;
 }
-
 .markdown-content thead {
-  background: linear-gradient(135deg, #1e3a5f 0%, #1e40af 100%);
+  display: table-header-group;
 }
-
+.markdown-content tbody {
+  display: table-row-group;
+}
+.markdown-content tr {
+  display: table-row;
+}
 .markdown-content th {
-  background-color: #1e3a5f;
-  color: #60a5fa;
-  font-weight: 700;
-  padding: 12px 16px;
-  text-align: left;
-  border: 1px solid #3b82f6;
-  font-size: 14px;
+  @apply bg-ta-accent/20 text-ta-accent font-semibold px-3 py-2 text-left border border-ta-border;
+  display: table-cell;
+  white-space: nowrap;
 }
-
 .markdown-content td {
-  padding: 10px 16px;
-  border: 1px solid #334155;
-  color: #e2e8f0;
-  font-size: 13px;
+  @apply px-3 py-2 border border-ta-border;
+  display: table-cell;
 }
-
-.markdown-content tbody tr:nth-child(odd) {
-  background-color: rgba(15, 23, 42, 0.8);
-}
-
-.markdown-content tbody tr:nth-child(even) {
-  background-color: rgba(30, 41, 59, 0.6);
-}
-
-.markdown-content tbody tr:hover {
-  background-color: rgba(59, 130, 246, 0.2);
+.markdown-content tr:nth-child(even) {
+  @apply bg-ta-card/50;
 }

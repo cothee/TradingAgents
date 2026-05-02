@@ -74,10 +74,10 @@ export default function LiveProgress({ taskId, onComplete, onBack }: Props) {
   const formatTime = (s: number) => `${Math.floor(s / 60).toString().padStart(2, '0')}:${(s % 60).toString().padStart(2, '0')}`
 
   return (
-    <div className="space-y-6">
+    <div className="space-y-4 sm:space-y-6">
       {/* Progress bar */}
-      <div className="bg-ta-card rounded-xl border border-ta-border p-6">
-        <div className="flex items-center justify-between mb-3">
+      <div className="bg-ta-card rounded-xl border border-ta-border p-4 sm:p-6">
+        <div className="flex items-center justify-between mb-3 flex-wrap gap-2">
           <button onClick={onBack} className="px-4 py-2 bg-ta-accent/10 border border-ta-accent/30 text-ta-accent rounded-lg hover:bg-ta-accent/20 transition-colors text-sm font-medium">← 返回</button>
           <span className="text-ta-text font-mono font-medium">{ticker || '分析中...'}</span>
           <span className="text-ta-muted font-mono text-sm">⏱ {formatTime(elapsed)}</span>
@@ -92,13 +92,13 @@ export default function LiveProgress({ taskId, onComplete, onBack }: Props) {
       </div>
 
       {/* Agent chain */}
-      <div className="bg-ta-card rounded-xl border border-ta-border p-6">
+      <div className="bg-ta-card rounded-xl border border-ta-border p-4 sm:p-6">
         <h3 className="text-sm text-ta-muted mb-4">执行链</h3>
         <AgentChain agents={agents} />
       </div>
 
       {/* Real-time report */}
-      <div className="bg-ta-card rounded-xl border border-ta-border p-6">
+      <div className="bg-ta-card rounded-xl border border-ta-border p-4 sm:p-6">
         <h3 className="text-sm text-ta-muted mb-4">实时报告输出</h3>
         <div className="space-y-4 max-h-96 overflow-y-auto pr-2">
           {sections.map((s) => (
