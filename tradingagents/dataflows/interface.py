@@ -23,6 +23,16 @@ from .alpha_vantage import (
     get_global_news as get_alpha_vantage_global_news,
 )
 from .alpha_vantage_common import AlphaVantageRateLimitError
+from .akshare import (
+    get_AK_data_online,
+    get_AK_fundamentals,
+    get_AK_balance_sheet,
+    get_AK_cashflow,
+    get_AK_income_statement,
+    get_AK_news,
+    get_AK_global_news,
+    get_AK_insider_transactions,
+)
 
 # Configuration and routing logic
 from .config import get_config
@@ -63,6 +73,7 @@ TOOLS_CATEGORIES = {
 VENDOR_LIST = [
     "yfinance",
     "alpha_vantage",
+    "akshare",
 ]
 
 # Mapping of methods to their vendor-specific implementations
@@ -71,41 +82,50 @@ VENDOR_METHODS = {
     "get_stock_data": {
         "alpha_vantage": get_alpha_vantage_stock,
         "yfinance": get_YFin_data_online,
+        "akshare": get_AK_data_online,
     },
-    # technical_indicators
+    # technical indicators — uses stockstats, load_ohlcv auto-routes A-share
     "get_indicators": {
         "alpha_vantage": get_alpha_vantage_indicator,
         "yfinance": get_stock_stats_indicators_window,
+        "akshare": get_stock_stats_indicators_window,
     },
     # fundamental_data
     "get_fundamentals": {
         "alpha_vantage": get_alpha_vantage_fundamentals,
         "yfinance": get_yfinance_fundamentals,
+        "akshare": get_AK_fundamentals,
     },
     "get_balance_sheet": {
         "alpha_vantage": get_alpha_vantage_balance_sheet,
         "yfinance": get_yfinance_balance_sheet,
+        "akshare": get_AK_balance_sheet,
     },
     "get_cashflow": {
         "alpha_vantage": get_alpha_vantage_cashflow,
         "yfinance": get_yfinance_cashflow,
+        "akshare": get_AK_cashflow,
     },
     "get_income_statement": {
         "alpha_vantage": get_alpha_vantage_income_statement,
         "yfinance": get_yfinance_income_statement,
+        "akshare": get_AK_income_statement,
     },
     # news_data
     "get_news": {
         "alpha_vantage": get_alpha_vantage_news,
         "yfinance": get_news_yfinance,
+        "akshare": get_AK_news,
     },
     "get_global_news": {
         "yfinance": get_global_news_yfinance,
         "alpha_vantage": get_alpha_vantage_global_news,
+        "akshare": get_AK_global_news,
     },
     "get_insider_transactions": {
         "alpha_vantage": get_alpha_vantage_insider_transactions,
         "yfinance": get_yfinance_insider_transactions,
+        "akshare": get_AK_insider_transactions,
     },
 }
 
@@ -132,15 +152,30 @@ def get_vendor(category: str, method: str = None) -> str:
     return config.get("data_vendors", {}).get(category, "default")
 
 def route_to_vendor(method: str, *args, **kwargs):
-    """Route method calls to appropriate vendor implementation with fallback support."""
+    """Route method calls to appropriate vendor based on ticker format."""
+    from .ticker_detect import detect_market
+
     category = get_category_for_method(method)
-    vendor_config = get_vendor(category, method)
-    primary_vendors = [v.strip() for v in vendor_config.split(',')]
+
+    # Auto-detect vendor from the first argument (ticker/symbol)
+    ticker = args[0] if args else kwargs.get("symbol") or kwargs.get("ticker", "")
+    market = detect_market(str(ticker))
+
+    if market == "a_share":
+        primary_vendors = ["akshare"]
+    else:
+        config = get_config()
+        tool_vendors = config.get("tool_vendors", {})
+        if method in tool_vendors:
+            vendor_config = tool_vendors[method]
+        else:
+            vendor_config = config.get("data_vendors", {}).get(category, "yfinance")
+        primary_vendors = [v.strip() for v in vendor_config.split(',')]
 
     if method not in VENDOR_METHODS:
         raise ValueError(f"Method '{method}' not supported")
 
-    # Build fallback chain: primary vendors first, then remaining available vendors
+    # Build fallback chain
     all_available_vendors = list(VENDOR_METHODS[method].keys())
     fallback_vendors = primary_vendors.copy()
     for vendor in all_available_vendors:
@@ -157,6 +192,6 @@ def route_to_vendor(method: str, *args, **kwargs):
         try:
             return impl_func(*args, **kwargs)
         except AlphaVantageRateLimitError:
-            continue  # Only rate limits trigger fallback
+            continue
 
     raise RuntimeError(f"No available vendor for '{method}'")

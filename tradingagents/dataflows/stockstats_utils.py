@@ -8,6 +8,7 @@ from stockstats import wrap
 from typing import Annotated
 import os
 from .config import get_config
+from .ticker_detect import detect_market
 
 logger = logging.getLogger(__name__)
 
@@ -45,16 +46,40 @@ def _clean_dataframe(data: pd.DataFrame) -> pd.DataFrame:
 
 
 def load_ohlcv(symbol: str, curr_date: str) -> pd.DataFrame:
-    """Fetch OHLCV data with caching, filtered to prevent look-ahead bias.
-
-    Downloads 15 years of data up to today and caches per symbol. On
-    subsequent calls the cache is reused. Rows after curr_date are
-    filtered out so backtests never see future prices.
-    """
+    """Fetch OHLCV data with caching, filtered to prevent look-ahead bias."""
     config = get_config()
     curr_date_dt = pd.to_datetime(curr_date)
 
-    # Cache uses a fixed window (15y to today) so one file per symbol
+    # A-share: use AKShare (no caching for now, or add caching later)
+    if detect_market(symbol) == "a_share":
+        import akshare as ak
+        code = symbol[:6] if len(symbol) > 6 else symbol
+        today_date = pd.Timestamp.today()
+        start_date = today_date - pd.DateOffset(years=5)
+
+        data = ak.stock_zh_a_hist(
+            symbol=code,
+            period="daily",
+            start_date=start_date.strftime("%Y-%m-%d").replace("-", ""),
+            end_date=today_date.strftime("%Y-%m-%d").replace("-", ""),
+            adjust="qfq",
+        )
+
+        # Rename to match yfinance format
+        data = data.rename(columns={
+            "日期": "Date",
+            "开盘": "Open",
+            "最高": "High",
+            "最低": "Low",
+            "收盘": "Close",
+            "成交量": "Volume",
+        })
+        data = data[["Date", "Open", "High", "Low", "Close", "Volume"]]
+        data = _clean_dataframe(data)
+        data = data[data["Date"] <= curr_date_dt]
+        return data
+
+    # US stock: existing yfinance caching logic (keep original implementation)
     today_date = pd.Timestamp.today()
     start_date = today_date - pd.DateOffset(years=5)
     start_str = start_date.strftime("%Y-%m-%d")
@@ -81,10 +106,7 @@ def load_ohlcv(symbol: str, curr_date: str) -> pd.DataFrame:
         data.to_csv(data_file, index=False, encoding="utf-8")
 
     data = _clean_dataframe(data)
-
-    # Filter to curr_date to prevent look-ahead bias in backtesting
     data = data[data["Date"] <= curr_date_dt]
-
     return data
 
 

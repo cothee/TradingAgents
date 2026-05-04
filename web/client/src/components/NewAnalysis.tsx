@@ -38,11 +38,11 @@ export default function NewAnalysis({ onStart }: Props) {
           <input
             type="text"
             value={ticker}
-            onChange={(e) => setTicker(e.target.value.toUpperCase())}
-            placeholder="NVDA"
+            onChange={(e) => setTicker(e.target.value)}
+            placeholder="NVDA / 600519"
             className="w-full bg-ta-bg border border-ta-border rounded-lg px-4 py-3 text-ta-text font-mono focus:outline-none focus:border-ta-accent transition-colors"
           />
-          <p className="text-xs text-ta-muted mt-1">仅支持美股（如 NVDA, AAPL）</p>
+          <p className="text-xs text-ta-muted mt-1">支持美股和A股（如 NVDA, AAPL, 600519, 000001）</p>
         </div>
 
         <div className="flex gap-6">

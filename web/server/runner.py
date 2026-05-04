@@ -59,6 +59,19 @@ async def _run_task(task_id: str):
             task["status"] = TaskStatus.FAILED
             task["error"] = str(e)
 
+            # Clean up intermediate files for failed tasks
+            config = DEFAULT_CONFIG.copy()
+            reports_dir = Path(config.get("results_dir"))
+            results_dir = reports_dir / task["ticker"].upper() / task["analysis_date"]
+            if results_dir.exists():
+                import shutil
+                shutil.rmtree(results_dir, ignore_errors=True)
+                # Remove parent ticker dir if now empty
+                ticker_dir = results_dir.parent
+                if ticker_dir.exists() and not any(ticker_dir.iterdir()):
+                    shutil.rmtree(ticker_dir, ignore_errors=True)
+                logger.info("Task %s: cleaned up intermediate files", task_id)
+
         task["completed_at"] = __import__("datetime").datetime.now().strftime("%Y-%m-%d %H:%M:%S")
 
 
