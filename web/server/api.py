@@ -178,3 +178,21 @@ async def get_report_html(task_id: str, section: str):
             return JSONResponse(content={"html": html_content})
 
     raise HTTPException(status_code=404, detail="Report section not found")
+
+
+@router.get("/heatmap")
+async def get_heatmap():
+    """Return market heatmap data (cached, 5-min TTL)."""
+    from web.server.heatmap import fetch_heatmap_data, heatmap_cache
+    data = heatmap_cache.get()
+    if data is None:
+        data = fetch_heatmap_data()
+        heatmap_cache.set(data)
+    return data
+
+
+@router.get("/popular-stocks")
+async def get_popular_stocks(limit: int = 10):
+    """Return top N most-analyzed tickers from task history."""
+    from web.server.heatmap import get_popular_stocks_ranking
+    return {"stocks": get_popular_stocks_ranking(limit)}

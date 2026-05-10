@@ -16,9 +16,19 @@ app: FastAPI | None = None
 @asynccontextmanager
 async def lifespan(app: FastAPI):
     """Startup: load existing reports as task history. Shutdown: cancel pending tasks."""
+    import asyncio
+    from web.server.heatmap import fetch_heatmap_data, heatmap_cache
     from web.server.tasks import load_history_from_disk
     from web.server.runner import start_worker
-    import asyncio
+
+    # Pre-warm heatmap cache in background (don't block startup)
+    async def prewarm_cache():
+        try:
+            data = await asyncio.to_thread(fetch_heatmap_data)
+            heatmap_cache.set(data)
+            logger.info("Heatmap cache pre-warmed")
+        except Exception as e:
+            logger.warning("Failed to pre-warm heatmap cache: %s", e)
 
     app.state.task_store = {}
     app.state.event_queues = {}
@@ -27,6 +37,8 @@ async def lifespan(app: FastAPI):
 
     # Start background task worker
     worker_task = asyncio.create_task(start_worker())
+    # Pre-warm heatmap cache without blocking startup
+    asyncio.create_task(prewarm_cache())
     yield
 
     # Cleanup: cancel running tasks

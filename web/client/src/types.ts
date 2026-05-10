@@ -38,3 +38,23 @@ export interface AgentStatus {
   agent: string
   status: 'pending' | 'in_progress' | 'completed'
 }
+
+export interface HeatmapStock {
+  ticker: string
+  name: string
+  change_pct: number
+  price: string | number
+}
+
+export interface HeatmapResponse {
+  us: Record<string, HeatmapStock[]>
+  a_share: Record<string, HeatmapStock[]>
+}
+
+export interface PopularStock {
+  ticker: string
+  analysis_count: number
+  latest_status: string
+  latest_task_id: string
+  latest_date: string
+}

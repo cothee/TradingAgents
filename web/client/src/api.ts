@@ -3,6 +3,8 @@ import type {
   TaskInfo,
   TaskResponse,
   SSEEvent,
+  HeatmapResponse,
+  PopularStock,
 } from './types'
 
 const API_BASE = '/api'
@@ -42,4 +44,17 @@ export function subscribeToTask(taskId: string, onEvent: (event: SSEEvent) => vo
   es.addEventListener('heartbeat', (e) => onEvent({ event: 'heartbeat', data: JSON.parse(e.data) }))
 
   return es
+}
+
+export async function getHeatmap(): Promise<HeatmapResponse> {
+  const res = await fetch(`${API_BASE}/heatmap`)
+  if (!res.ok) throw new Error(`API error: ${res.status}`)
+  return res.json()
+}
+
+export async function getPopularStocks(): Promise<PopularStock[]> {
+  const res = await fetch(`${API_BASE}/popular-stocks`)
+  if (!res.ok) throw new Error(`API error: ${res.status}`)
+  const data = await res.json()
+  return data.stocks
 }

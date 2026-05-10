@@ -6,6 +6,8 @@ import NewAnalysis from './components/NewAnalysis'
 import TaskList from './components/TaskList'
 import LiveProgress from './components/LiveProgress'
 import ReportView from './components/ReportView'
+import MarketHeatmap from './components/MarketHeatmap'
+import PopularStocks from './components/PopularStocks'
 
 type View = 'home' | 'progress' | 'report'
 
@@ -51,8 +53,10 @@ export default function App() {
         {view === 'home' && (
           <>
             <NewAnalysis onStart={handleAnalysisStart} />
-            <div className="mt-10">
+            <div className="mt-10 space-y-10">
               <TaskList tasks={tasks} onSelect={handleTaskSelect} />
+              <MarketHeatmap />
+              <PopularStocks onSelect={handleTaskSelect} />
             </div>
           </>
         )}

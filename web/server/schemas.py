@@ -42,3 +42,27 @@ class TaskResponse(BaseModel):
 
 class TaskListResponse(BaseModel):
     tasks: list[TaskInfo]
+
+
+class HeatmapStock(BaseModel):
+    ticker: str
+    name: str
+    change_pct: float
+    price: str | float
+
+
+class HeatmapResponse(BaseModel):
+    us: dict[str, list[HeatmapStock]]
+    a_share: dict[str, list[HeatmapStock]]
+
+
+class PopularStock(BaseModel):
+    ticker: str
+    analysis_count: int
+    latest_status: str
+    latest_task_id: str
+    latest_date: str
+
+
+class PopularStocksResponse(BaseModel):
+    stocks: list[PopularStock]
